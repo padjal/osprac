@@ -1,4 +1,4 @@
 # osprac
 Practise for uni Intro to operating systems course.
 
-Джалев Павел Добрев
+Джалев Павел Добрев БПИ208
