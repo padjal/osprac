@@ -12,6 +12,7 @@ int main(int argc, char *argv[], char *envp[])
     if (pid == -1)
     {
         /* ошибка */
+        return -1;
     }
     else if (pid == 0)
     {
