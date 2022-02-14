@@ -5,14 +5,20 @@
 
 int main()
 {
-    int fd[2], result;
+    int fd_one[2], fd_two[2], result;
 
     size_t size;
     char resstring[14];
 
-    if (pipe(fd) < 0)
+    if (pipe(fd_one) < 0)
     {
-        printf("Can\'t open pipe\n");
+        printf("Can\'t open parent pipe\n");
+        exit(-1);
+    }
+
+    if (pipe(fd_two) < 0)
+    {
+        printf("Can\'t open child pipe\n");
         exit(-1);
     }
 
@@ -20,7 +26,7 @@ int main()
 
     if (result < 0)
     {
-        printf("Can\'t fork child\n");
+        printf("Can\'t fork\n");
         exit(-1);
     }
     else if (result > 0)
@@ -28,13 +34,19 @@ int main()
 
         /* Parent process */
 
-        if (close(fd[0]) < 0)
+        if (close(fd_one[0]) < 0)
         {
-            printf("parent: Can\'t close reading side of pipe\n");
+            printf("parent: Can\'t close reading side of the parent pipe\n");
             exit(-1);
         }
 
-        size = write(fd[1], "Hello, world!", 14);
+        if (close(fd_two[1]) < 0)
+        {
+            printf("parent: Can\'t close reading side of the child pipe\n");
+            exit(-1);
+        }
+
+        size = write(fd_one[1], "Hello, world!", 14);
 
         if (size != 14)
         {
@@ -42,22 +54,27 @@ int main()
             exit(-1);
         }
 
-        size = read(fd[0], resstring, 14);
+        if (close(fd_one[1]) < 0)
+        {
+            printf("parent: Can\'t close writing side of parent pipe\n");
+            exit(-1);
+        }
+
+        size = read(fd_two[0], resstring, 14);
 
         if (size != 14)
         {
-            printf("Can\'t write all string to pipe\n");
+            printf("Cannot read child!\n");
             exit(-1);
         }
 
-        printf("resstring: %s\n", resstring);
-
-        if (close(fd[1]) < 0)
+        if (close(fd_two[0]) < 0)
         {
-            printf("parent: Can\'t close writing side of pipe\n");
+            printf("Can\'t close reading side of child pipe\n");
             exit(-1);
         }
 
+        printf("Successfully read from child, resstring = %s, \n", resstring);
         printf("Parent exit\n");
     }
     else
@@ -65,13 +82,19 @@ int main()
 
         /* Child process */
 
-        if (close(fd[1]) < 0)
+        if (close(fd_one[1]) < 0)
         {
-            printf("child: Can\'t close writing side of pipe\n");
+            printf("child: Can\'t close writing side of parent pipe\n");
             exit(-1);
         }
 
-        size = read(fd[0], resstring, 14);
+        if (close(fd_two[0]) < 0)
+        {
+            printf("child: Can\'t close writing side of child pipe\n");
+            exit(-1);
+        }
+
+        size = read(fd_one[0], resstring, 14);
 
         if (size < 0)
         {
@@ -79,13 +102,29 @@ int main()
             exit(-1);
         }
 
-        printf("Child exit, resstring:%s\n", resstring);
+        printf("Successfully read from parent: %s, \n", resstring);
 
-        if (close(fd[0]) < 0)
+        if (close(fd_one[0]) < 0)
         {
             printf("child: Can\'t close reading side of pipe\n");
             exit(-1);
         }
+
+        size = write(fd_two[1], resstring, 14);
+
+        if (size != 14)
+        {
+            printf("Can\'t write all string to pipe\n");
+            exit(-1);
+        }
+
+        if (close(fd_two[1]) < 0)
+        {
+            printf("Can\'t close writing side of child pipe\n");
+            exit(-1);
+        }
+
+        printf("Exit child\n");
     }
 
     return 0;
