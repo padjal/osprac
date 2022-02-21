@@ -16,9 +16,8 @@ int main()
         exit(-1);
     }
 
-    while (1)
+    while (write(fd[1], string, 14) == 14)
     {
-        write(fd[1], string, 14);
         pipe_size += 14;
         printf("Buffer size: %d bytes\n", pipe_size);
     }
