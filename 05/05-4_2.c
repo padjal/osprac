@@ -29,7 +29,7 @@ int main()
         exit(-1);
     }
 
-    printf("Child exit, resstring:%s\n", resstring);
+    printf("resstring:%s\n", resstring);
 
     if (close(fd) < 0)
     {
